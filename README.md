@@ -9,7 +9,7 @@ A Flask application that sends job application reminders to a Slack channel and 
 - Tracks and displays the total number of applications submitted with progress percentage
 - Updates the message when a user marks an application as completed
 - Daily reports of job application activity with achievement metrics
-- Daily target tracking (80 applications per day)
+- Daily target tracking (configurable via environment variables)
 - Automatic counter reset after daily report
 
 ## Project Structure
@@ -38,7 +38,9 @@ jobalerts/
 ├── run.py                 # Application entry point
 ├── send_alert.py          # Helper script to send alerts and reports
 ├── requirements.txt       # Project dependencies
+├── .env                   # Environment variables (not in git)
 ├── .env.example           # Example environment variables
+├── Procfile               # For deployment platforms
 └── .gitignore             # Git ignore file
 ```
 
@@ -74,13 +76,34 @@ jobalerts/
    cp .env.example .env
    ```
 
-6. Edit the `.env` file with your Slack credentials:
+6. Edit the `.env` file with your Slack credentials and settings:
 
    ```
+   # Slack Bot Configuration
    SLACK_BOT_TOKEN=your_slack_bot_token
    JOB_ALERTS_CHANNEL=your_job_alerts_channel_id
    DAILY_REPORT_CHANNEL=your_daily_report_channel_id
+   
+   # Application Settings
+   DAILY_TARGET_COUNT=60
+   
+   # Flask Settings
+   DEBUG=True
+   PORT=5000
    ```
+
+## Environment Variables
+
+The application uses environment variables for configuration. These can be set in a `.env` file (local development) or directly in your deployment platform:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SLACK_BOT_TOKEN` | Your Slack Bot User OAuth Token | None (Required) |
+| `JOB_ALERTS_CHANNEL` | Channel ID for job alerts | None (Required) |
+| `DAILY_REPORT_CHANNEL` | Channel ID for daily reports | None (Required) |
+| `DAILY_TARGET_COUNT` | Target number of applications per day | 60 |
+| `DEBUG` | Enable Flask debug mode | True |
+| `PORT` | Port to run the application on | 5000 |
 
 ## Usage
 
@@ -101,19 +124,45 @@ jobalerts/
    This will give you options to:
    - Send a job alert with an "I've Applied!" button
    - Send a daily report (will reset the application counter)
+   - Run in auto-send mode to send reminders at regular intervals
 
 4. Available API endpoints:
    - Send a job alert: `GET /slack/send_alert`
    - Daily job report: `GET /slack/daily_report`
    - Slack actions webhook: `POST /slack/actions`
 
+## Deployment
+
+### Railway
+
+This application is configured to run on Railway.
+
+1. Create a new project in Railway
+2. Connect to your GitHub repository
+3. Add the following environment variables:
+   - `SLACK_BOT_TOKEN`
+   - `JOB_ALERTS_CHANNEL`
+   - `DAILY_REPORT_CHANNEL`
+   - `DAILY_TARGET_COUNT` (optional)
+   - `DEBUG=False` (recommended for production)
+
+Railway will automatically detect the Procfile and run the application.
+
+### Other Platforms
+
+To deploy on other platforms, make sure to:
+
+1. Set the required environment variables
+2. Install the dependencies from requirements.txt
+3. Run the application with `python run.py`
+
 ## Daily Application Target
 
-The application is configured with a daily target of 80 job applications. You can modify this in `app/config.py` by changing the `DAILY_TARGET_COUNT` value.
+The application is configured with a daily target number of job applications (default: 60). You can modify this by changing the `DAILY_TARGET_COUNT` environment variable.
 
 The daily report shows:
 
-- Current count vs. target (e.g., 65/80)
+- Current count vs. target (e.g., 45/60)
 - Progress percentage
 - Status message based on achievement level
 - Automatic counter reset after the report is sent

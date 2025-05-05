@@ -1,5 +1,7 @@
 # Environment variables and credentials
 .env
+.env.*
+!.env.example
 
 # Application data
 applied_count.txt
